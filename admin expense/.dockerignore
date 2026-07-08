@@ -1,0 +1,11 @@
+.venv
+.git
+.env
+__pycache__
+*.pyc
+.pytest_cache
+tests
+deployment
+dom_diagnose.json
+sessions.db
+sessions.db-*
