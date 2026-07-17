@@ -98,14 +98,7 @@ def smart_parse_input(node_input: str, ctx: Context) -> Event:
 
 
 def get_todays_date() -> str:
-    """Return today's date in YYYY-MM-DD format.
-
-    Use this when the user says 'today' or 'yesterday' or doesn't
-    specify a date, so you can fill in or calculate the correct date.
-
-    Returns:
-        Today's date as a string in YYYY-MM-DD format.
-    """
+    """Return today's date in YYYY-MM-DD format."""
     return date.today().isoformat()
 
 
@@ -281,18 +274,7 @@ def emit_expense_alert(
     category: str,
     risk_summary: str,
 ) -> dict:
-    """Emit a structured log alerting finance to review a high-value expense.
-
-    Args:
-        submitter: Who submitted the expense.
-        amount: The expense amount.
-        currency: ISO 4217 currency code (e.g. USD, EUR, INR).
-        category: The expense category.
-        risk_summary: Why this expense needs review.
-
-    Returns:
-        Confirmation that the alert was emitted.
-    """
+    """Emit a structured log alerting finance to review a high-value expense."""
     log_entry = {
         "severity": "WARNING",
         "message": (

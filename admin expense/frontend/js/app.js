@@ -1,4 +1,5 @@
-(function () {
+(async function () {
+  await window.firebaseConfigReady;
   const CURRENCIES = [
     { code: "USD", symbol: "$", flag: "🇺🇸" },
     { code: "EUR", symbol: "€", flag: "🇪🇺" },
@@ -261,8 +262,7 @@
   function statusFromText(text) {
     if (/(inject|pii)/i.test(text)) return "flagged";
     if (/(reject|declin)/i.test(text)) return "flagged";
-    if (needsReview(text)) return "review";
-    if (/approv/i.test(text)) return "auto";
+    if (/auto[- ]?approv/i.test(text)) return "auto";
     return "review";
   }
 

@@ -1,4 +1,5 @@
-(function () {
+(async function () {
+  await window.firebaseConfigReady;
   const db = firebase.firestore();
   const auth = firebase.auth();
   let adminUser = null;

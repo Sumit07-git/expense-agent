@@ -205,5 +205,4 @@ tools/a2a-inspector/
 
 # Heavy / generated files
 sessions.db
-uv.lock
 deployment_metadata.json

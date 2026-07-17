@@ -3,7 +3,9 @@ import logging
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
 from fastapi import Request
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from google.adk.cli.fast_api import get_fast_api_app
@@ -684,9 +686,11 @@ class DevUIScriptInjectionMiddleware:
         )
 
 
+load_dotenv()
+
 app = get_fast_api_app(
     agents_dir="expense_agent",
-    web=True,
+    web=False,
     otel_to_cloud=False,
     trigger_sources=["pubsub"],
     session_service_uri=os.environ.get(
@@ -706,10 +710,35 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.get("/api/firebase-config")
+async def firebase_config():
+    admin_emails_raw = os.environ.get("ADMIN_EMAILS", "")
+    admin_emails = [
+        e.strip() for e in admin_emails_raw.split(",") if e.strip()
+    ]
+
+    return JSONResponse({
+        "firebaseConfig": {
+            "apiKey": os.environ.get("FIREBASE_API_KEY", ""),
+            "authDomain": os.environ.get("FIREBASE_AUTH_DOMAIN", ""),
+            "projectId": os.environ.get("FIREBASE_PROJECT_ID", ""),
+            "storageBucket": os.environ.get("FIREBASE_STORAGE_BUCKET", ""),
+            "messagingSenderId": os.environ.get("FIREBASE_MESSAGING_SENDER_ID", ""),
+            "appId": os.environ.get("FIREBASE_APP_ID", ""),
+        },
+        "adminEmails": admin_emails,
+        "backendConfig": {
+            "BACKEND_URL": os.environ.get("BACKEND_URL", ""),
+            "APP_NAME": "expense_agent",
+        },
+    })
+
+
 _frontend_dir = Path(__file__).resolve().parent.parent / "frontend"
 if _frontend_dir.is_dir():
-    app.mount("/ui", StaticFiles(directory=str(_frontend_dir), html=True), name="ui")
-    logger.info(f"Serving frontend from {_frontend_dir} at /ui")
+    app.mount("/", StaticFiles(directory=str(_frontend_dir), html=True), name="frontend")
+    logger.info(f"Serving frontend from {_frontend_dir} at /")
 
 
 async def diagnose_dom(request: Request):

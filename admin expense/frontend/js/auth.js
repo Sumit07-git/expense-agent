@@ -1,4 +1,5 @@
-(function () {
+(async function () {
+  await window.firebaseConfigReady;
   const auth = firebase.auth();
   const googleProvider = new firebase.auth.GoogleAuthProvider();
 
