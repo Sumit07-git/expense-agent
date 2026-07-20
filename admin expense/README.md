@@ -1,17 +1,3 @@
-Title  Expense Agent
-
-Emoji  💸
-
-Colorfrom  blue
-
-Colorto  purple
-
-Sdk  docker
-
-App_port  7860
-
-Pinned  false
-
 # Ledgerline — Ambient Expense Agent
 
 An agentic expense-processing app: employees describe an expense in plain language to a chat agent, low-value expenses are auto-approved instantly, and higher-value ones are routed to a human admin for approval — all backed by [Google ADK](https://adk.dev/), Firebase, and a small custom frontend.
