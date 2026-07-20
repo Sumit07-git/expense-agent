@@ -67,12 +67,11 @@ CURRENCY_INJECTION_SCRIPT = """
     {code:"KES",symbol:"KSh",flag:"🇰🇪",name:"Kenyan Shilling"},
   ];
 
-  /* Persist the selected currency across page reloads */
   let selectedCurrency = localStorage.getItem("expense_currency") || "USD";
 
   const style = document.createElement("style");
   style.textContent = `
-    /* ---- Hide the app-type selector (only one agent) ---- */
+
     .app-selector-container,
     mat-form-field:has(mat-select[aria-label*="app"]),
     mat-form-field:has(mat-select[aria-label*="App"]),
@@ -81,7 +80,7 @@ CURRENCY_INJECTION_SCRIPT = """
       display: none !important;
     }
 
-    /* ---- Currency picker styles ---- */
+
     .currency-picker-wrapper {
       display: inline-flex;
       align-items: center;
@@ -239,7 +238,6 @@ CURRENCY_INJECTION_SCRIPT = """
   `;
   document.head.appendChild(style);
 
-  /* Helper to update the textarea placeholder to hint about selected currency */
   function updatePlaceholder() {
     var ta = document.querySelector("textarea[matinput], textarea[mat-input], mat-form-field textarea, .chat-input textarea, .mat-mdc-input-element, textarea");
     if (ta) {
@@ -339,9 +337,7 @@ CURRENCY_INJECTION_SCRIPT = """
     return wrapper;
   }
 
-  /* ---- Auto-select expense_agent & hide app selector ---- */
   function autoSelectAgent() {
-    /* Strategy 1: Try clicking mat-select options */
     const matSelects = document.querySelectorAll("mat-select, mat-form-field mat-select");
     matSelects.forEach(function(sel) {
       const label = (sel.getAttribute("aria-label") || "").toLowerCase();
@@ -358,14 +354,12 @@ CURRENCY_INJECTION_SCRIPT = """
               opt.click();
             }
           });
-          /* Close any open overlay */
           const backdrop = document.querySelector(".cdk-overlay-backdrop");
           if (backdrop) backdrop.click();
         }, 200);
       }
     });
 
-    /* Strategy 2: Hide any select/dropdown that looks like an app selector via broad CSS */
     const allFormFields = document.querySelectorAll("mat-form-field");
     allFormFields.forEach(function(ff) {
       const text = (ff.textContent || "").toLowerCase();
@@ -376,7 +370,6 @@ CURRENCY_INJECTION_SCRIPT = """
       }
     });
 
-    /* Strategy 3: Look for regular select elements */
     const regularSelects = document.querySelectorAll("select");
     regularSelects.forEach(function(sel) {
       const options = sel.querySelectorAll("option");
@@ -388,7 +381,6 @@ CURRENCY_INJECTION_SCRIPT = """
           sel.dispatchEvent(new Event("change", { bubbles: true }));
         }
       });
-      /* If this is a single-option select for app type, hide it */
       if (options.length <= 2 && hasExpense) {
         const parent = sel.closest("mat-form-field") || sel.closest(".form-field") || sel.parentElement;
         if (parent) parent.style.display = "none";
@@ -396,7 +388,6 @@ CURRENCY_INJECTION_SCRIPT = """
     });
   }
 
-  /* ---- Inject currency picker beside message input ---- */
   let pickerInjected = false;
   let agentSelected = false;
   let agentSelectAttempts = 0;
@@ -404,7 +395,6 @@ CURRENCY_INJECTION_SCRIPT = """
   function tryInjectPicker() {
     if (pickerInjected) return;
 
-    /* Broad selector: find the chat input textarea/input in any ADK dev UI variant */
     var textarea = document.querySelector(
       "textarea[matinput], textarea[mat-input], mat-form-field textarea, " +
       ".chat-input textarea, .mat-mdc-input-element, " +
@@ -414,7 +404,6 @@ CURRENCY_INJECTION_SCRIPT = """
     );
     if (!textarea) return;
 
-    /* Walk up to find the row containing the input + send button */
     var inputRow = textarea.closest("mat-form-field")
       || textarea.closest(".mat-mdc-form-field")
       || textarea.closest(".mat-mdc-text-field-wrapper")
@@ -424,7 +413,6 @@ CURRENCY_INJECTION_SCRIPT = """
     var actionRow = inputRow.parentElement;
     if (!actionRow) return;
 
-    /* Ensure flex layout so the picker sits to the left */
     if (getComputedStyle(actionRow).display !== "flex") {
       actionRow.style.display = "flex";
       actionRow.style.alignItems = "flex-end";
@@ -435,16 +423,14 @@ CURRENCY_INJECTION_SCRIPT = """
     actionRow.insertBefore(picker, actionRow.firstChild);
     pickerInjected = true;
 
-    /* Update the placeholder to reflect selected currency */
     updatePlaceholder();
   }
 
   const observer = new MutationObserver(function() {
-    /* Auto-select the expense agent and hide the app selector */
+
     if (!agentSelected && agentSelectAttempts < 15) {
       agentSelectAttempts++;
       autoSelectAgent();
-      /* Check if we successfully hid something */
       const hiddenFields = document.querySelectorAll("mat-form-field[style*='display: none']");
       if (hiddenFields.length > 0 || agentSelectAttempts >= 10) {
         agentSelected = true;
@@ -458,16 +444,15 @@ CURRENCY_INJECTION_SCRIPT = """
 
   observer.observe(document.body, { childList: true, subtree: true });
 
-  /* Also try immediately and after short delays for SPAs */
+
   setTimeout(autoSelectAgent, 500);
   setTimeout(autoSelectAgent, 1500);
   setTimeout(autoSelectAgent, 3000);
-  /* Extra retry for late-rendering Angular apps */
   [500, 1000, 2000, 3000, 5000].forEach(function(delay) {
     setTimeout(tryInjectPicker, delay);
   });
 
-  /* ---- Intercept fetch to prepend currency to messages ---- */
+
   const origFetch = window.fetch;
   window.fetch = function(url, opts) {
     if (
@@ -478,7 +463,6 @@ CURRENCY_INJECTION_SCRIPT = """
     ) {
       try {
         const body = JSON.parse(opts.body);
-        /* Standard ADK dev UI message format */
         if (body.newMessage && body.newMessage.parts && body.newMessage.parts.length > 0) {
           const firstPart = body.newMessage.parts[0];
           if (firstPart.text && !firstPart.text.startsWith("[Currency:") && !firstPart.text.startsWith("{")) {
@@ -486,7 +470,7 @@ CURRENCY_INJECTION_SCRIPT = """
             opts = Object.assign({}, opts, { body: JSON.stringify(body) });
           }
         }
-        /* Alternative message formats */
+
         if (body.message && typeof body.message === "string" && !body.message.startsWith("[Currency:") && !body.message.startsWith("{")) {
           body.message = "[Currency: " + selectedCurrency + "] " + body.message;
           opts = Object.assign({}, opts, { body: JSON.stringify(body) });
@@ -500,7 +484,7 @@ CURRENCY_INJECTION_SCRIPT = """
     return origFetch.call(this, url, opts);
   };
 
-  /* ---- Also intercept XMLHttpRequest for frameworks that use it ---- */
+
   const origXHROpen = XMLHttpRequest.prototype.open;
   const origXHRSend = XMLHttpRequest.prototype.send;
   XMLHttpRequest.prototype.open = function(method, url) {
